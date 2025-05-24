@@ -1,0 +1,113 @@
+version: "3.8"
+
+services:
+  # Service for basic Live Streaming (RTMP, HTTP-FLV, HLS)
+  srs-live:
+    image: ossrs/srs:5
+    container_name: srs_live
+    restart: unless-stopped
+    ports:
+      - "1935:1935" # RTMP
+      - "1985:1985" # HTTP API
+      - "8080:8080" # HTTP-FLV, HLS
+    command: ["./objs/srs", "-c", "conf/srs.conf"] # Default SRS config
+
+  # Service for WebRTC (video chat, with UDP for WebRTC traffic)
+  srs-webrtc:
+    image: ossrs/srs:5
+    container_name: srs_webrtc
+    restart: unless-stopped
+    environment:
+      CANDIDATE: "192.168.1.10" # !! REPLACE WITH YOUR SERVER IP !!
+    ports:
+      - "1935:1935"
+      - "1985:1985"
+      - "8080:8080"
+      - "1990:1990" # WebRTC Signaling
+      - "8088:8088" # WebRTC HTTP API (used in docs, might not be necessary for basic setup)
+      - "8000:8000/udp" # WebRTC UDP traffic
+    command: ["./objs/srs", "-c", "conf/srs.conf"]
+
+  # Service for WebRTC Live Streaming (converting RTMP to WebRTC)
+  srs-rtmp2rtc:
+    image: ossrs/srs:5
+    container_name: srs_rtmp2rtc
+    restart: unless-stopped
+    environment:
+      CANDIDATE: "192.168.1.10" # !! REPLACE WITH YOUR SERVER IP !!
+    ports:
+      - "1935:1935"
+      - "1985:1985"
+      - "8080:8080"
+      - "8000:8000/udp"
+    command: ["./objs/srs", "-c", "conf/rtmp2rtc.conf"]
+
+  # Service for WebRTC with HTTPS (for pushing streams from non-localhost)
+  srs-webrtc-https:
+    image: ossrs/srs:5
+    container_name: srs_webrtc_https
+    restart: unless-stopped
+    environment:
+      CANDIDATE: "192.168.1.10" # !! REPLACE WITH YOUR SERVER IP !!
+    ports:
+      - "1935:1935"
+      - "1985:1985"
+      - "8080:8080"
+      - "1990:1990"
+      - "8088:8088"
+      - "8000:8000/udp"
+    # Mount custom certificates if you have them, otherwise SRS uses self-signed.
+    # volumes:
+    #   - ./server.key:/usr/local/srs/conf/server.key:ro
+    #   - ./server.crt:/usr/local/srs/conf/server.crt:ro
+    command: ["./objs/srs", "-c", "conf/https.docker.conf"]
+
+  # Service for SRT (Secure Reliable Transport) streaming
+  srs-srt:
+    image: ossrs/srs:5
+    container_name: srs_srt
+    restart: unless-stopped
+    ports:
+      - "1935:1935"
+      - "1985:1985"
+      - "8080:8080"
+      - "10080:10080/udp" # SRT port
+    command: ["./objs/srs", "-c", "conf/srt.conf"]
+
+  # FFmpeg encoder service (for publishing streams)
+  encoder:
+    image: ossrs/srs:encoder
+    container_name: srs_encoder
+    # This service is usually run manually to publish a stream,
+    # so 'restart: "no"' or no restart policy is generally preferred.
+    # We set it to 'no' to prevent it from continuously restarting if the source.flv isn't found.
+    restart: "no"
+    # To use a local doc/source.flv, you'd mount a volume like this:
+    # volumes:
+    #   - ./doc:/doc:ro # Assuming 'doc' directory is in the same location as docker-compose.yml
+    # This command is an example. You would typically run it manually or
+    # replace 'host.docker.internal' with the appropriate SRS service name (e.g., srs-live)
+    # and port if running within the same compose network.
+    # Example for publishing to srs-live:
+    # command: ffmpeg -stream_loop -1 -re -i /doc/source.flv -c copy -f flv rtmp://srs-live/live/livestream
+    # For now, keeping the original as it might be run external to the compose network for testing.
+    command:
+      [
+        "ffmpeg",
+        "-stream_loop",
+        "-1",
+        "-re",
+        "-i",
+        "doc/source.flv",
+        "-c",
+        "copy",
+        "-f",
+        "flv",
+        "rtmp://host.docker.internal/live/livestream",
+      ]
+    # Ensure this container can resolve host.docker.internal (Docker Desktop, Linux requires extra_hosts)
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Required for Linux Docker users to resolve host.docker.internal
+    depends_on:
+      - srs-live # Depend on at least one SRS service for publishing examples
+      # You might want to depend on srs-rtmp2rtc or others if publishing to them.
