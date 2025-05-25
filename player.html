@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SRS HTTP-FLV Player</title>
-    <script src="https://cdn.jsdelivr.net/npm/flv.js@latest"></script>
+    <title>SRS HLS Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   </head>
   <body>
     <video id="videoElement" controls autoplay width="640" height="480"></video>
     <script>
-      if (flvjs.isSupported()) {
-        var videoElement = document.getElementById("videoElement");
-        var flvPlayer = flvjs.createPlayer({
-          type: "flv",
-          url: "http://35.172.84.215:8080/live/livestream.flv",
+      var videoElement = document.getElementById("videoElement");
+      var hlsUrl = "http://35.172.84.215:8080/live/camera_4_test.m3u8"; // Example HLS URL
+
+      if (Hls.isSupported()) {
+        var hls = new Hls();
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(videoElement);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          videoElement.play();
         });
-        flvPlayer.attachMediaElement(videoElement);
-        flvPlayer.load();
-        flvPlayer.play();
+      } else if (videoElement.canPlayType("application/vnd.apple.mpegurl")) {
+        // HLS.js is not supported on platforms like iOS Safari
+        // Try to play HLS natively
+        videoElement.src = hlsUrl;
+        videoElement.addEventListener("loadedmetadata", function () {
+          videoElement.play();
+        });
       }
     </script>
   </body>
