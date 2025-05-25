@@ -8,8 +8,8 @@ set "RTMP_SERVER=rtmp://35.172.84.215:1935/live/"
 set "FFMPEG_PARAMS=-re -f lavfi -i "testsrc=size=640x480:rate=30:duration=99999999" -c:v libx264 -preset veryfast -tune zerolatency -g 60 -bf 0 -b:v 800k -maxrate 900k -bufsize 1800k -f flv"
 
 :: Loop to start 8 FFmpeg instances
-for /l %%i in (1,1,3) do (
-    set "CAMERA_NAME=camera_%%i_test"
+for /l %%i in (1,1,8) do (
+    set "CAMERA_NAME=camera_%%i"
     set "OUTPUT_URL=!RTMP_SERVER!!CAMERA_NAME!"
 
     :: Use 'start "FFmpeg Instance %%i" cmd /k' to open a new command prompt window
