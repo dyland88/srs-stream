@@ -1,32 +1,59 @@
-# On aws lightsail
+# SRS Stream Setup
 
-- set static ip
-- opened ports
-- sudo apt-get install docker.io
-- sudo docker pull ossrs/srs:v6.0.166
-- sudo docker run --rm -it -p 1935:1935 -p 1985:1985 -p 8080:8080 ossrs/srs:5
+- I have a docker compose file but it's not needed for these instructions
+- The player.html is for quick testing
 
-### To stream from OBS
+## AWS Lightsail Setup
 
-- set obs stream to rtmp://AMAZON_INSTANCE_IP/live
-- set stream key to "livestream"
-- view stream at rtmp://YOUR_LIGHTSAIL_PUBLIC_IP:1935/live/livestream
+- Set static IP.
+- Opened all ports (probably not the most secure but idgaf)
+  - Or just open ports 1935 and 8080
+- Install Docker:
+  ```bash
+  sudo apt-get install docker.io
+  ```
+- Pull SRS Docker image:
+  ```bash
+  sudo docker pull ossrs/srs:v6.0.166
+  ```
+- Copy SRS configuration (from Windows machine):
+  - You will need to use your key to ssh into the aws instance
+  ```bash
+  scp -i ./path/to/key.pem srs.conf ubuntu@35.172.84.215:~
+  ```
+- Run SRS Docker container:
+  ```bash
+  sudo docker run --rm -it -p 1935:1935 -p 8080:8080 ossrs/srs:5 ./objs/srs -c conf/hls.conf
+  ```
 
-# To encode video camera stream
+## Streaming from OBS
 
-- ffmpeg -rtsp_transport tcp -i "rtsp://USERNAME:PASSWORD@YOUR_WEBCAM_IP_X:PORT/PATH" \
+- Set OBS stream server to: `rtmp://YOUR_LIGHTSAIL_PUBLIC_IP/live`
+- Set stream key to: `camera_1`
+- View stream using: `rtmp://YOUR_LIGHTSAIL_PUBLIC_IP:1935/live/camera_1` and player.html
+
+## Streaming from FFmpeg
+
+### To transcode from IP webcam
+
+```bash
+ffmpeg -rtsp_transport tcp -i "rtsp://USERNAME:PASSWORD@YOUR_WEBCAM_IP_X:PORT/PATH" \
   -c:v libx264 -preset veryfast -tune zerolatency -b:v 1000k -maxrate 1200k -bufsize 2000k \
   -c:a aac -b:a 128k -ar 44100 -ac 2 \
-  -f flv rtmp://YOUR_LIGHTSAIL_PUBLIC_IP:1935/live/camera_X_stream
+  -f flv rtmp://YOUR_LIGHTSAIL_PUBLIC_IP:1935/live/camera_1
+```
 
-- ffmpeg -re -f lavfi -i "testsrc=size=640x480:rate=30:duration=99999999" -c:v libx264 -preset veryfast -tune zerolatency -g 60 -bf 0 -b:v 800k -maxrate 900k -bufsize 1800k -f flv rtmp://35.172.84.215:1935/live/camera_test1
+### To transmit a test video
 
-# To make srs playback work:
+```bash
+ffmpeg -re -f lavfi -i "testsrc=size=640x480:rate=30:duration=99999999" \
+  -c:v libx264 -preset veryfast -tune zerolatency -g 60 -bf 0 -b:v 800k -maxrate 900k -bufsize 1800k \
+  -f flv rtmp://35.172.84.215:1935/live/camera_1
+```
 
-### on local machine:
+### Automatically Run Multiple FFmpeg Instances
 
-- scp -i ./SrsKey.pem srs.conf ubuntu@35.172.84.215:~
-
-### on lightsail:
-
-- sudo docker run --rm -it -p 1935:1935 -p 8080:8080 ossrs/srs:5 ./objs/srs -c conf/hls.conf
+- Execute the script:
+  ```bash
+  ./ffmpeg-script.bat
+  ```
