@@ -82,3 +82,7 @@ ffmpeg -re -f lavfi -i "testsrc=size=640x480:rate=30:duration=99999999" \
 ### Viewing the video
 
 - You can view the video by embedding `https://stream.YOURDOMAIN.com/live/camera_1.m3u8` in a web video player
+- With the way that SRS works, any subdirectory (including changing the /live path) you stream into will be made available as a similar subdirectory
+  - Streaming to `rtmp://stream.YOURDOMAIN.com/live/cameraN` outputs to `https://stream.YOURDOMAIN.com/live/camera_1.m3u8`
+  - Streaming to `rtmp://stream.YOURDOMAIN.com/live/whatever` outputs to `https://stream.YOURDOMAIN.com/live/whatever.m3u8`
+  - Streaming to `rtmp://stream.YOURDOMAIN.com/example/path` outputs to `https://stream.YOURDOMAIN.com/output/path.m3u8`
