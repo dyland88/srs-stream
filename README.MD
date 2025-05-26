@@ -1,8 +1,8 @@
 # SRS Stream Setup
 
 - This setup encodes multiple video streams with FFmpeg into an RTMP feed
-- The video streams are relayed to an AWS lightsail instance running SRS (an open source realtime video server) to make the video streams available online
-- It uses Caddy for HTTPS encryption using a custom top level domain
+- The video streams are relayed to an AWS lightsail instance running SRS (an open source realtime video server) to make the video streams available online as an HLS m3u8 playlist through a stream subdomain
+- It uses Caddy for HTTPS encryption using the SLS certificate from your top level domain
 
 ## AWS Lightsail Setup
 
