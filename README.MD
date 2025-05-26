@@ -1,17 +1,24 @@
 # SRS Stream Setup
 
-- I have a docker compose file but it's not needed for these instructions
-- The player.html is for quick testing
+- This setup encodes multiple video streams with FFmpeg into an RTMP feed
+- The video streams are relayed to an AWS lightsail instance running SRS (an open source realtime video server) to make the video streams available online
+- It uses Caddy for HTTPS encryption using a custom top level domain
 
 ## AWS Lightsail Setup
 
+### Set up networking
+
 - Set static IP.
-- Opened all ports (probably not the most secure but idgaf)
-  - Or just open ports 1935 (for rtmp), 8080, 80 (for HTTP challenge) and 443 (for HTTPS)
+- Opened all ports (probably not the most secure but fine for now)
+  - Or just open ports 1935 (for rtmp), 8080, 80 (for caddy HTTP challenge) and 443 (for HTTPS)
 
 ### Add subdomain for HTTPS streaming
 
-- Go to vercel "domains" page on dashboard and add a stream DNS record of type "A" with an IP that points to the lightsail static IP.
+- If you have vercel set up as your nameserver like I do:
+- Go to the vercel domains page on dashboard and add a DNS record with name "stream" of type "A" with an IP that points to the lightsail static IP.
+
+### Install dependencies
+
 - Install Docker:
   ```bash
   sudo apt-get install docker.io
