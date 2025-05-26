@@ -2,15 +2,12 @@ version: "3.8"
 
 services:
   srs:
-    image: ossrs/srs:v6.0.166 # Or your preferred SRS version, e.g., ossrs/srs:5
+    image: ossrs/srs:v6.0.166
     container_name: srs_server
     ports:
       - "1935:1935" # RTMP port
     volumes:
       - ./srs.conf:/usr/local/srs/conf/srs.conf
-    # Use the command from your README if you were using a specific conf like hls.conf
-    # For example: command: ./objs/srs -c conf/hls.conf
-    # Or for the provided srs.conf:
     command: ./objs/srs -c /usr/local/srs/conf/srs.conf
     restart: unless-stopped
 
