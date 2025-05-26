@@ -1,0 +1,3 @@
+stream.dylancoben.com {
+    reverse_proxy srs:8080
+}

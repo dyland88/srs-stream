@@ -7,7 +7,11 @@
 
 - Set static IP.
 - Opened all ports (probably not the most secure but idgaf)
-  - Or just open ports 1935 and 8080
+  - Or just open ports 1935 (for rtmp), 8080, 80 (for HTTP challenge) and 443 (for HTTPS)
+
+### Add subdomain for HTTPS streaming
+
+- Go to vercel "domains" page on dashboard and add a stream DNS record of type "A" with an IP that points to the lightsail static IP.
 - Install Docker:
   ```bash
   sudo apt-get install docker.io
@@ -16,21 +20,31 @@
   ```bash
   sudo docker pull ossrs/srs:v6.0.166
   ```
-- Copy SRS configuration (from Windows machine):
-  - You will need to use your key to ssh into the aws instance
+- Install docker-compose:
   ```bash
-  scp -i ./path/to/key.pem srs.conf ubuntu@35.172.84.215:~
+    sudo apt-get install -y docker-compose
+  ```
+- Copy SRS configuration, docker compose, and caddyfile (from Windows machine):
+  - You will need to use your key to scp to the aws instance
+  ```bash
+  scp -i SrsKey.pem srs.conf docker-compose.yaml Caddyfile ubuntu@35.172.84.215:~
   ```
 - Run SRS Docker container:
+
   ```bash
-  sudo docker run --rm -it -p 1935:1935 -p 8080:8080 ossrs/srs:5 ./objs/srs -c conf/hls.conf
+  sudo docker-compose up -d
+  ```
+
+- Old command to run SRS without Caddy HTTPS authentication
+  ```bash
+  sudo docker run --rm -it -p 1935:1935 -p 8080:8080 -v ~/srs.conf:/usr/local/srs/conf/srs.conf ossrs/srs:v6.0.166 ./objs/srs -c /usr/local/srs/conf/srs.conf
   ```
 
 ## Streaming from OBS
 
-- Set OBS stream server to: `rtmp://YOUR_LIGHTSAIL_PUBLIC_IP/live`
+- Set OBS stream server to: `rtmp://stream.YOURDOMAIN.com/live`
 - Set stream key to: `camera_1`
-- View stream using: `rtmp://YOUR_LIGHTSAIL_PUBLIC_IP:1935/live/camera_1` and player.html
+- View stream using: `https://stream.YOURDOMAIN.com/live/camera_1.m3u8` and player.html
 
 ## Streaming from FFmpeg
 
@@ -57,3 +71,7 @@ ffmpeg -re -f lavfi -i "testsrc=size=640x480:rate=30:duration=99999999" \
   ```bash
   ./ffmpeg-script.bat
   ```
+
+### Viewing the video
+
+- You can view the video by embedding `https://stream.YOURDOMAIN.com/live/camera_1.m3u8` in a web video player
