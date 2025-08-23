@@ -2,21 +2,24 @@
 setlocal enabledelayedexpansion
 
 :: Define the base RTMP server address
-set "RTMP_SERVER=rtmp://35.172.84.215:1935/live/"
+set "RTMP_SERVER=rtmp://stream.rohitschickencoop.com/live"
 
-:: Define common FFmpeg encoding parameters on a single line to avoid quoting issues with line continuation
-set "FFMPEG_PARAMS=-re -f lavfi -i "testsrc=size=640x480:rate=30:duration=99999999" -c:v libx264 -preset veryfast -tune zerolatency -g 60 -bf 0 -b:v 800k -maxrate 900k -bufsize 1800k -f flv"
+:: Define common FFmpeg encoding parameters on a single line
+set "FFMPEG_PARAMS=-c:v libx264 -preset veryfast -tune zerolatency -g 60 -b:v 1000k -maxrate 1200k -bufsize 2000k -c:a aac -b:a 128k -ar 44100 -ac 2 -f flv"
+
+:: Define RTSP credentials
+set "RTSP_USER=admin"
+set "RTSP_PASS=12345"
 
 :: Loop to start 8 FFmpeg instances
-for /l %%i in (1,1,8) do (
-    set "CAMERA_NAME=camera_%%i"
-    set "OUTPUT_URL=!RTMP_SERVER!!CAMERA_NAME!"
+for /l %%i in (0,1,7) do (
+    set /a "IP_LAST_OCTET=50 + %%i"
+    set "INPUT_URL=rtsp://!RTSP_USER!:!RTSP_PASS!@192.168.1.!IP_LAST_OCTET!:554/ch0_0.264"
+    set "CAMERA_NAME=camera_!IP_LAST_OCTET!"
+    set "OUTPUT_URL=!RTMP_SERVER!/!CAMERA_NAME!"
 
-    :: Use 'start "FFmpeg Instance %%i" cmd /k' to open a new command prompt window
-    :: '/k' keeps the window open after the command finishes, so you can see output
-    :: '/c' would close the window immediately after the command finishes
-    echo Starting FFmpeg instance %%i for !OUTPUT_URL!
-    start "FFmpeg Instance %%i" cmd /k ffmpeg %FFMPEG_PARAMS% "!OUTPUT_URL!"
+    echo Starting FFmpeg instance for !INPUT_URL! to !OUTPUT_URL!
+    start "FFmpeg Instance !IP_LAST_OCTET!" cmd /k ffmpeg -i "!INPUT_URL!" %FFMPEG_PARAMS% "!OUTPUT_URL!"
 )
 
 echo All 8 FFmpeg instances have been launched.

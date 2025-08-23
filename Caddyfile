@@ -1,3 +1,3 @@
-stream.dylancoben.com {
+stream.rohitschickencoop.com {
     reverse_proxy srs:8080
 }

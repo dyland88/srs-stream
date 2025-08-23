@@ -6,11 +6,14 @@
 
 ## AWS Lightsail Setup
 
+- Download ssh key from lightsail website, rename to SrsKey.pem and save to this SRS-STREAM folder
+- Ensure the Caddyfile corresponds to the domain that you will be using.
+
 ### Set up networking
 
 - Set static IP.
 - Opened all ports (probably not the most secure but fine for now)
-  - Or just open ports 1935 (for rtmp), 8080, 80 (for caddy HTTP challenge) and 443 (for HTTPS)
+  - Or just open ports 1935 (for rtmp), 80 (for caddy HTTP challenge), 443 (for HTTPS), 22 for scp,
 
 ### Add subdomain for HTTPS streaming
 
@@ -31,12 +34,12 @@
   ```bash
     sudo apt-get install -y docker-compose
   ```
-- Copy SRS configuration, docker compose, and caddyfile (from Windows machine):
+- Copy SRS configuration, docker compose, and caddyfile (on Windows machine):
   - You will need to use your key to scp to the aws instance
   ```bash
-  scp -i SrsKey.pem srs.conf docker-compose.yaml Caddyfile ubuntu@35.172.84.215:~
+  scp -i SrsKey.pem srs.conf docker-compose.yaml Caddyfile ubuntu@98.86.190.229:~
   ```
-- Run SRS Docker container:
+- Run SRS Docker container (on Lightsail):
 
   ```bash
   sudo docker-compose up -d
@@ -58,18 +61,13 @@
 ### To transcode from IP webcam
 
 ```bash
-ffmpeg -rtsp_transport tcp -i "rtsp://USERNAME:PASSWORD@YOUR_WEBCAM_IP_X:PORT/PATH" \
-  -c:v libx264 -preset veryfast -tune zerolatency -b:v 1000k -maxrate 1200k -bufsize 2000k \
-  -c:a aac -b:a 128k -ar 44100 -ac 2 \
-  -f flv rtmp://YOUR_LIGHTSAIL_PUBLIC_IP:1935/live/camera_1
+ffmpeg -rtsp_transport tcp -i "rtsp://admin:12345@192.168.1.54:554/ch0_0.264" -c:v libx264 -preset veryfast -tune zerolatency -b:v 1000k -maxrate 1200k -bufsize 2000k -c:a aac -b:a 128k -ar 44100 -ac 2 -f flv rtmp://stream.rohitschickencoop.com/live/camera_1
 ```
 
 ### To transmit a test video
 
 ```bash
-ffmpeg -re -f lavfi -i "testsrc=size=640x480:rate=30:duration=99999999" \
-  -c:v libx264 -preset veryfast -tune zerolatency -g 60 -bf 0 -b:v 800k -maxrate 900k -bufsize 1800k \
-  -f flv rtmp://35.172.84.215:1935/live/camera_1
+ffmpeg -re -f lavfi -i "testsrc=size=640x480:rate=30:duration=99999999" -c:v libx264 -preset veryfast -tune zerolatency -g 60 -bf 0 -b:v 800k -maxrate 900k -bufsize 1800k -f flv rtmp://stream.rohitschickencoop.com/live/camera_1
 ```
 
 ### Automatically Run Multiple FFmpeg Instances
