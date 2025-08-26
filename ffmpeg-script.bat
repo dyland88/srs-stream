@@ -5,8 +5,7 @@ setlocal enabledelayedexpansion
 set "RTMP_SERVER=rtmp://stream.rohitschickencoop.com/live"
 
 :: Define common FFmpeg encoding parameters on a single line
-set "FFMPEG_PARAMS=-c:v libx264 -preset veryfast -tune zerolatency -g 60 -b:v 1000k -maxrate 1200k -bufsize 2000k -c:a aac -b:a 128k -ar 44100 -ac 2 -f flv"
-
+set "FFMPEG_PARAMS=-c:v h264_nvenc -preset fast -s 1280x720 -zerolatency true -threads 1 -g 30 -b:v 800k -maxrate 1000k -bufsize 1600k -c:a aac -b:a 128k -ar 44100 -ac 2 -f flv -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 :: Define RTSP credentials
 set "RTSP_USER=admin"
 set "RTSP_PASS=12345"
