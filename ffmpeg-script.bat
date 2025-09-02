@@ -5,7 +5,7 @@ setlocal enabledelayedexpansion
 set "RTMP_SERVER=rtmp://stream.rohitschickencoop.com/live"
 
 :: Define common FFmpeg encoding parameters on a single line
-set "FFMPEG_PARAMS=-c:v h264_nvenc -preset fast -s 1280x720 -zerolatency true -threads 1 -g 30 -b:v 800k -maxrate 1000k -bufsize 1600k -c:a aac -b:a 128k -ar 44100 -ac 2 -f flv -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+set "FFMPEG_PARAMS=-c:v h264_nvenc -preset fast -s 960x540 -zerolatency true -threads 1 -g 30 -b:v 400k -maxrate 500k -bufsize 800k -c:a aac -b:a 128k -ar 22050 -ac 1 -f flv -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 -fflags +genpts"
 
 :: Define RTSP credentials
 set "RTSP_USER=admin"
@@ -21,7 +21,7 @@ echo Starting FFmpeg instances with monitoring...
 echo.
 
 :: Loop to start 4 FFmpeg instances (0-3, IPs 50-53)
-for /l %%i in (0,1,3) do (
+for /l %%i in (0,1,7) do (
     set /a "IP_LAST_OCTET=50 + %%i"
     set "INPUT_URL=rtsp://!RTSP_USER!:!RTSP_PASS!@192.168.1.!IP_LAST_OCTET!:554/ch0_0.264"
     set "CAMERA_NAME=camera_!IP_LAST_OCTET!"
@@ -54,7 +54,7 @@ echo.
 echo [%date% %time%] Checking stream status...
 
 :: Check each window and restart if needed
-for /l %%i in (0,1,3) do (
+for /l %%i in (0,1,7) do (
     set /a "IP_LAST_OCTET=50 + %%i"
     set "WINDOW_TITLE=FFmpeg_Camera_!IP_LAST_OCTET!"
     
